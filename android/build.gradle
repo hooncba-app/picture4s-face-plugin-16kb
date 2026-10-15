@@ -1,0 +1,70 @@
+group = "com.example.face_plugin"
+version = "1.0-SNAPSHOT"
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.1.0")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+
+android {
+    namespace = "com.example.face_plugin"
+
+    compileSdk = 34
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/main/java"
+        test.java.srcDirs += "src/test/java"
+    }
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    // FacePlugin.loadModelFile() uses AssetManager.openFd() and memory mapping.
+    androidResources {
+        noCompress += "tflite"
+    }
+
+    dependencies {
+        // LiteRT v1 preserves org.tensorflow.lite.Interpreter and ships 16 KB
+        // aligned JNI binaries. litert-api:1.4.0 is supplied transitively.
+        implementation 'com.google.ai.edge.litert:litert:1.4.0'
+        // The plugin does not use the Support API; do not reintroduce its old
+        // TensorFlow runtime transitively through tensorflow-lite-support.
+        // ML Kit Face Detection
+        // 16.1.5 also ships 4 KB aligned libface_detector_v2_jni.so.
+        implementation 'com.google.mlkit:face-detection:16.1.7'
+    }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+
+            testLogging {
+                events "passed", "skipped", "failed", "standardOut", "standardError"
+                outputs.upToDateWhen {false}
+                showStandardStreams = true
+            }
+        }
+    }
+}
